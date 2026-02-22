@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head><title>Phi-4 PTT Translator</title></head>
+<body>
+    <h1>Phi-4 Push-to-Talk Translator</h1>
+    <button id="talkBtn" style="width: 200px; height: 100px; font-size: 20px;">Hold to Talk</button>
+    <div id="status">Ready</div>
+    <hr>
+    <h3>Translation Result:</h3>
+    <div id="result" style="font-weight: bold; color: blue;"></div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        const btn = document.getElementById('talkBtn');
+        const status = document.getElementById('status');
+        const resultDiv = document.getElementById('result');
+
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                status.innerText = "Uploading and inferencing...";
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'recording.wav');
+
+                // Send to API
+                const response = await fetch('/translate', { method: 'POST', body: formData });
+                const data = await response.json();
+                
+                resultDiv.innerText = data.text;
+                status.innerText = "Done!";
+                audioChunks = [];
+            };
+        });
+
+        // Bind button events
+        btn.addEventListener('mousedown', () => {
+            audioChunks = [];
+            mediaRecorder.start();
+            status.innerText = "Recording...";
+            btn.style.backgroundColor = "red";
+        });
+
+        btn.addEventListener('mouseup', () => {
+            mediaRecorder.stop();
+            btn.style.backgroundColor = "";
+        });
+    </script>
+</body>
+</html>

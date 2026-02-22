@@ -1,0 +1,13 @@
+# Also need sudo apt install ffmpeg
+
+fastapi
+uvicorn
+librosa
+transformers==4.48.2
+torch
+accelerate
+backoff
+peft
+bitsandbytes
+python-multipart
+pydub
